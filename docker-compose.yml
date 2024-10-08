@@ -1,0 +1,46 @@
+services:
+  nginx:
+    container_name: cn-project-nginx
+    image: nginx:alpine
+    volumes:
+      - .:/cn-project
+      - ./environment/dev/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+    networks:
+      - cn-network
+    depends_on:
+      - php
+
+  php:
+    container_name: cn-project-php
+    build:
+      context: .
+      dockerfile: /environment/dev/php/Dockerfile
+    working_dir: /cn-project
+    volumes:
+      - .:/cn-project
+    networks:
+      - cn-network
+    depends_on:
+      - mysql
+
+  mysql:
+    container_name: cn-project-mysql
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE=dev_db
+      - MYSQL_ROOT_PASSWORD=password
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - cn-network
+
+volumes:
+  db_data:
+
+networks:
+  cn-network:
+    driver: bridge
