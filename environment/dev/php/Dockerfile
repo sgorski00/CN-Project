@@ -8,7 +8,8 @@ RUN composer install --no-dev --optimize-autoloader
 
 FROM php:8.1-fpm-alpine
 
-COPY --from=composer /composer /cn-project
+WORKDIR /cn-project
+COPY --from=composer /composer .
 
 RUN apk update && apk --no-cache add \
     zip \
