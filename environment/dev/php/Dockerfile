@@ -1,34 +1,22 @@
-FROM composer:2.4.4 AS composer
+FROM php:8.2
 
-WORKDIR /composer
+RUN apt-get update -y
+RUN apt-get install -y \
+    unzip \
+    zip \
+    git \
+    libpq-dev \
+    libcurl4-gnutls-dev
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN docker-php-ext-install pdo pdo_mysql bcmath
+RUN pecl install -o -f redis \
+    && rm -rf /tmp/pear \
+    && docker-php-ext-enable redis
+
+WORKDIR /var/www
 COPY . .
 
-ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN composer install --no-dev --optimize-autoloader
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-FROM php:8.1-fpm-alpine
-
-WORKDIR /cn-project
-COPY --from=composer /composer .
-
-RUN apk update && apk --no-cache add \
-    zip \
-    unzip \
-    git \
-    libzip-dev \
-    libpng-dev \
-    oniguruma-dev \
-    libxml2-dev \
-    gcc \
-    g++ \
-    make \
-    && docker-php-ext-configure zip \
-    && docker-php-ext-install \
-    zip \
-    pdo \
-    pdo_mysql \
-    mbstring \
-    bcmath \
-    gd
-
-RUN rm -rf /var/cache/apk/* /tmp/*
+ENV PORT=8000
+ENTRYPOINT [ "environment/dev/php/entrypoint.sh" ]
