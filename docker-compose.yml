@@ -8,47 +8,26 @@ services:
         volumes:
             - ./:/var/www
         expose:
-            - "8000"
+            - "9000:9000"
         networks:
             - cn-network
         depends_on:
-            - db
+            - mysql
             - redis
-    db:
+
+    mysql:
         image: mysql:8.0
         container_name: mysql-container
         ports:
             - "3306:3306"
         environment:
-            - MYSQL_DATABASE=${DB_DATABASE}
-            - MYSQL_USER=${DB_USERNAME}
-            - MYSQL_PASSWORD=${DB_PASSWORD}
-            - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+            - MYSQL_DATABASE=app_db
+            - MYSQL_ROOT_PASSWORD=p2ssw0rd
         volumes:
             - db-data:/var/lib/mysql
-            - ./docker-compose/mysql:/docker-entrypoint-initdb.d
         networks:
             - cn-network
-    phpmyadmin:
-        image: phpmyadmin/phpmyadmin
-        container_name: phpmyadmin-container
-        ports:
-            -   "8080:80"
-        environment:
-            - PMA_HOST=db
-            - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
-        depends_on:
-            - db
-        networks:
-            - cn-network
-    redis:
-        image: redis:alpine
-        container_name: redis-container
-        command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"
-        ports:
-            - "6379:6379"
-        networks:
-            - cn-network
+
     nginx:
         image: nginx:latest
         container_name: nginx-container
@@ -61,8 +40,19 @@ services:
             - cn-network
         depends_on:
             - php
+
+    redis:
+        image: redis:alpine
+        container_name: redis-container
+        command: redis-server --appendonly yes
+        ports:
+            - "6379:6379"
+        networks:
+            - cn-network
+
 volumes:
     db-data:
+
 networks:
     cn-network:
         driver: bridge

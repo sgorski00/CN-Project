@@ -1,22 +1,24 @@
-FROM php:8.2
+FROM php:8.2-fpm
 
-RUN apt-get update -y
-RUN apt-get install -y \
+RUN apt-get update && apt-get install -y \
+    git \
     unzip \
     zip \
-    git \
     libpq-dev \
-    libcurl4-gnutls-dev
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN docker-php-ext-install pdo pdo_mysql bcmath
-RUN pecl install -o -f redis \
-    && rm -rf /tmp/pear \
-    && docker-php-ext-enable redis
+    libonig-dev \
+    libcurl4-gnutls-dev \
+    libxml2-dev \
+    && docker-php-ext-install pdo pdo_mysql bcmath mbstring xml
 
-WORKDIR /var/www
-COPY . .
+RUN pecl install redis \
+    && docker-php-ext-enable redis
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-ENV PORT=8000
-ENTRYPOINT [ "environment/dev/php/entrypoint.sh" ]
+WORKDIR /var/www
+
+COPY .env.example .env
+COPY . .
+
+ENTRYPOINT ["environment/dev/php/entrypoint.sh"]
+CMD ["php-fpm"]

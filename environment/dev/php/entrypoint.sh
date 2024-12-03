@@ -1,18 +1,14 @@
 #!/bin/bash
 
-if [ ! -f "vendor/autoload.php" ]; then
-    composer install --no-progress --no-interaction
-fi
-
-if [ ! -f ".env" ]; then
+if [ ! -f .env ]; then
     cp .env.example .env
 fi
 
-php artisan migrate
-php artisan key:generate
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
+if [ ! -d "vendor" ]; then
+    composer install --no-dev --no-interaction --optimize-autoloader
+fi
 
-php artisan serve --port=$PORT --host=0.0.0.0 --env=.env
-exec docker-php-entrypoint "$@"
+php artisan key:generate --force
+php artisan migrate --force
+
+exec php-fpm
