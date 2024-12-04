@@ -1,0 +1,15 @@
+\chapter{Konfiguracja kontenerów}
+Plik \verb|docker-compose.yml| to plik główny, wywoływany jako pierwszy przy użyciu technologii docker compose. Tutaj konfigurowane są wszystkie kontenery, sieci i wolumeny.
+Plik jest podzielony na 3 części:
+\begin{itemize}
+    \item \verb|services| - tutaj znajduje się szczegółowa konfiguracja wszystkich konterów, które zostają uruchomione poprzez docker compose. Konfiguracje opisane są w tak zwanych usługach (\verb|service|). Sczegółowa analiza poszczególnych usług zostanie opisana w tym rozdziale.
+    \item \verb|volumes| - w tym miejscu znajduje się wolumen o nazwie \textit{db-data}. Został utworzony, żeby dane były przechowywane w sposób trwały. Wolumen ten został wykorzystany w kontenerze bazy danych.
+    \item \verb|networks| - w tej sekcji tworzona jest sieć dockera, w której będą działały wszystkie kontenery z sekcji \verb|services|. Jest to niezbędne do zapewnienia odpowiedniej łączności kontenerów między sobą. Sieć w tym projekcie nosi nazwę \textit{cn-network} i jest skonfigurowany do używania sterownika \verb|bridge|
+\end{itemize}
+
+Plik docker-compose jest plikiem w formacie YAML, którego struktura opiera się na wcięciach, a dane zapisywane są w formacie \verb|klucz: wartość|
+
+\input{php}
+\input{mysql}
+\input{nginx}
+\input{redis}

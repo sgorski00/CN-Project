@@ -1,0 +1,16 @@
+\section{Redis}
+\verb|Redis| to system bazodanowy \verb|no-sql|, który działa w pamięci i przechowuje dane tymczasowe. Dzięki tej technologii zwiększa się wydajność aplikacji. Redis zostanie zintegrowany z kontenerem PHP i wspomoże dostęp do często używanych danych. Werjsa użyta w projekcie to \verb|Alpine| - najnowsza, lżejsza wersja technologii.
+
+\subsection{docker-compose.yml}
+\begin{lstlisting}[language=yaml, caption={Konfiguracja kontenera Redis w pliku docker-compose.yml}, label={lst:docker_compose_redis}, numbers=left, frame=single]
+    redis:
+        image: redis:alpine
+        container_name: redis-container
+        command: redis-server --appendonly yes
+        ports:
+            - "6379:6379"
+        networks:
+            - cn-network
+\end{lstlisting}
+
+W listingu \ref{lst:docker_compose_redis} widać konfigurację technologii \verb|Redis|. Nowością tutaj jest klucz \verb|command| z wartością \verb|redis-server --appendonly yes|. Klucz ten wywołuje komendę wpisaną w wartości poczas uruchomienia kontenera. Wartość \verb|redis-server| uruchamia serwer \verb|Redis|. Parametr \verb|--appendonly yes| włącza tryb zapisywania operacji do pliku.

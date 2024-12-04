@@ -1,0 +1,10 @@
+\chapter{Podsumowanie}
+W ramach projektu udało się stworzyć środowisko uruchomieniowe wykorzystując \verb|Docker compose| dla aplikacji webowej opartej na technologiach takich jak: \verb|PHP (Laravel), Nginx, MySQL i Redis|. Wykorzystana została do tego celu konfiguracja plikowa w plikach \verb|docker-compose.yml, Dockerfile| itd.
+
+Konfiguracja ta pozwala na uruchomienie środowiska programistycznego na dowolnym komputerze, który posiada pliki źródłowe i program Docker.
+
+Początkowo pojawiły się problemy związane z nieznajomością używanych technologii. Przez długi czas był problem z połączeniem bazy danych, przez co na stronie głównej pojawiał się błąd z rodziny 5xx. Rozwiązaniem okazało się zmienienie podejścia budowania niestandardowego obrazu PHP z Laravelem i momentu kopiowania pliku \verb|.env.example| do pliku \verb|.env|. Pomogło również zminimalizowanie konfiguracji do korzystania z użytkownika \verb|root| w konfiguracji \verb|MySQL|.
+
+Z niewiadomych przczyn pojawił się również problem z wykorzystaniem PHP w standardowej wersji. W tym przypadku zmienienie obrazu na wersję \verb|FPM| oraz dodanie skryptu instalującego \verb|Composera|, zamiast instalowanie go w pliku \verb|Dockerfile| pomogło rozwiązać problem.
+
+Środowisko mimo wszystko można jeszcze poprawić dodając nowe kontenery (np. \verb|PHPMyAdmin| lub \verb|Node.js|) oraz można popracować nad zwiększeniem wydajności.

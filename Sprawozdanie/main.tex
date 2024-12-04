@@ -1,0 +1,81 @@
+\documentclass{report}
+\usepackage{graphicx}
+\usepackage{pdfpages}
+\usepackage{blindtext}
+\usepackage{titlesec}
+\usepackage{polski}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+%Ustawienie kolorowania tekstu docker-compose
+\lstdefinelanguage{yaml}{
+  morekeywords={version, services, image, volumes, ports, environment, volumes},
+  sensitive=true,
+  morecomment=[l][\color{gray}]{\#},
+  morestring=[b][\color{blue}]{"},
+  morestring=[b][\color{blue}]{'}
+}
+
+%Ustawienie kolorowania tekstu dla Dockerfile
+\lstdefinestyle{dockerfile}{
+    language=sh,
+    backgroundcolor=\color{white},  
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},       
+    commentstyle=\color{green},   
+    stringstyle=\color{red},      
+    morekeywords={FROM, RUN, COPY, WORKDIR, ENTRYPOINT, CMD},
+    numbers=left,
+    stepnumber=1,
+    numberstyle=\tiny\color{gray},
+    numbersep=5pt,
+    tabsize=2,
+    breaklines=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    frame=single
+}
+
+\lstdefinestyle{nginx}{
+    language=bash,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green},
+    stringstyle=\color{red},
+    basicstyle=\ttfamily\footnotesize,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    frame=single,
+    breaklines=true,
+    showstringspaces=false,
+    morekeywords={server, location, listen, root, index, try_files, fastcgi_pass, fastcgi_param, fastcgi_intercept_errors, deny}
+}
+
+%Ustawienie spisu treści
+\titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter}{1em}{} 
+\renewcommand*\contentsname{Spis treści}
+
+%Ustawienie rozmiarów
+\titlespacing{\section}{0pt}{12pt}{6pt}
+\titlespacing{\subsection}{0pt}{6pt}{6pt}
+\usepackage[left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm]{geometry}
+
+%Początek dokumentu
+\begin{document}
+
+%Strona tytułowa
+\includepdf[pages=-]{images/title-page.pdf}
+
+%Spis treści
+\tableofcontents
+\newpage
+
+%Rozdziały
+\include{introduction}
+\include{instruction}
+\include{file-description}
+\include{summary}
+
+
+\end{document}

@@ -1,0 +1,111 @@
+\section{PHP}
+PHP jest serwerowym językiem programowania kluczowym dla działania aplikacji, w tym projekcie skonfigurowanym z frameworkiem \verb|Laravel|, który usprawnia tworzenie aplikacji webowych. Użyto wersji PHP 8.2-fpm, zgodnej z Laravel 9 i nowszymi, zapewniającej wysoką wydajność dzięki FastCGI Process Manager (FPM).
+
+Kontener PHP wzbogacono o dodatkowe zależności, takie jak Composer, zarządzający pakietami, oraz Redis, używany jako pamięć podręczna. Ten kontener obsługuje logikę aplikacji i komunikuje się z innymi usługami.
+\subsection{docker-compose.yml}
+Plik \verb|docker-compose.yml| definiuje konfigurację kontenera PHP.
+
+\newpage
+\begin{lstlisting}[language=yaml, caption={Konfiguracja kontenera php w pliku docker-compose.yml}, label={lst:docker_compose_php}, numbers=left, frame=single]
+    php:
+        build:
+            context: .
+            dockerfile: /environment/dev/php/Dockerfile
+        container_name: php-container
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+        expose:
+            - "9000:9000"
+        networks:
+            - cn-network
+        depends_on:
+            - mysql
+            - redis
+\end{lstlisting}
+
+W listingu \ref{lst:docker_compose_php} pokazana jest część pliku \verb|docker-compose| odpowiedzialna za utworzenie kontenera PHP. Można zauważyć, że sekcja ta dzieli się na kilka części.
+\begin{itemize}
+    \item \verb|build| - komenda używana do tworzenia obrazu kontenera na podstawie plików źródłowych.
+    \begin{itemize}
+        \item \verb|context| - miejsce wywołania pliku (\textit{. - aktualna ścieżka}).
+        \item \verb|dockerfile| - lokalizacja pliku Dockerfile. W pliku Dockerfile został utworzony niestandardowy obraz na podstawie istniejącego już obrazu.
+    \end{itemize}
+    \item \verb|container_name| - nazwa kontenera - pole nieobowiązkowe, system sam może nadać nazwę, ale tutaj użytkownik posiada większą kontrolę.
+    \item \verb|working_dir| - określa katalog roboczy, w którym kontener rozpocznie pracę.
+    \item \verb|volumes| - określa jakie katalogi i pliki zostaną zamontowane do kontera. Wszystkie pliki źródłowe aplikacji zostają przeniesione do katalogu /var/www w kontenerze PHP.
+    \item \verb|expose| - określa porty, które kontener udostępnia innym kontenerom wewnątrz sieci (w tym przypadku inne kontenry będą mogły odnaleźć PHP na porcie 9000 w sieci cn-network).
+    \item \verb|networks| - sieci, w których kontener będzie pracował (w przypadku tego projektu wszystkie kontenery będą pracowały w jednej sieci, żeby miały do siebie swobodny dostęp).
+    \item \verb|depends_on| - komenda, w której można ustawić "priorytety" kontenerów. W tym przypadku kontener PHP zależy od kontenerów: \verb|mysql| i \verb|redis|, co oznacza, że PHP nie zostanie uruchomiony, dopóki wymienione kontenery nie zostaną uruchomione.
+\end{itemize}
+
+\subsection{Dockerfile}
+Plik Dockerfile pozwala na utworzenie niestandardowego obrazu na podstawie obrazu pobranego z \verb|Docker Hub|. Do tego pliku odwołała się usługa php w sekcji \verb|build|. W pliku tym ważne jest wskazanie z jakiego obrazu bazowego należy korzystać.
+
+\newpage
+\begin{lstlisting}[style=dockerfile, caption={Konfiguracja obrazu php w pliku Dockerilfe}, label={lst:dockerfile}]
+FROM php:8.2-fpm
+
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    zip \
+    libpq-dev \
+    libonig-dev \
+    libcurl4-gnutls-dev \
+    libxml2-dev \
+    && docker-php-ext-install pdo pdo_mysql bcmath mbstring xml
+
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www
+
+COPY .env.example .env
+COPY . .
+
+ENTRYPOINT ["environment/dev/php/entrypoint.sh"]
+CMD ["php-fpm"]
+\end{lstlisting}
+
+W listingu \ref{lst:dockerfile} obrazem bazowym jest php w wersji 8.2-fpm. Wyznacza się go za pomocą komendy FROM.
+
+W późniejszych etap pracuje się na wybranym obrazie, modyfikując go w dowolny sposób.
+
+W tym pliku kolejno:
+\begin{enumerate}
+    \item Aktualizowane i instalowane są wymagane przez \verb|Composer| biblioteki.
+    \item Instalowane jest rozszerzenie Redis, po czym zostaje aktywowany.
+    \item Kopiowany jest obraz najnowszej wersji \verb|Composera| do tworzonego obrazu PHP.
+    \item Ustawiany jest katalog roboczy, dzięki czemu kolejne operacje będą w nim wykonywane.
+    \item Kopiowany jest plik .env.example do pliku .env (w pliku tym są wszystkie zmienne projektu)
+    \item Kopiowana jest cała zawartość programu.
+    \item Uruchamiany jest skrypt \verb|entrypoint.sh|
+    \item Uruchamiany jest proces php-fpm, który będzie nasłuchwiał i obsługiwał żądania.
+\end{enumerate}
+
+\subsection{Skrypt Entrypoint}
+W projekcie, w celu instalacji \verb|composera| i wstępnej inicjalizacji plików, uzyty został skrypt w języku \verb|bash|.
+
+\newpage
+\begin{lstlisting}[language=bash, caption=Skrypt entrypoint.sh, label={lst:entrypoint}, numbers=left, frame=single]
+#!/bin/bash
+
+if [ ! -f .env ]; then
+    cp .env.example .env
+fi
+
+if [ ! -d "vendor" ]; then
+    composer install --no-dev --no-interaction --optimize-autoloader
+fi
+
+php artisan key:generate --force
+php artisan migrate --force
+
+exec php-fpm
+\end{lstlisting}
+
+Skrypt z listingu \ref{lst:entrypoint} wykonuje kilke kilka poleceń konsolowych w obrazie tworzonym w listingu \ref{lst:dockerfile}. Na początku kopiowany jest plik ze zmiennymi, ponieważ \verb|Laravel| potrzebuje niektórych danych w nim zawarych. Następnie instalowany jest composer.
+Po instalacji generowany jest unikalny klucz szyfrujący dla aplikacji Laravel, który zostaje zapisany w pliku \verb|.env|. Następnie baza zostaje zmigrowana. Od teraz kontener PHP jest skofigurowany do pracy z frameworkiem \verb|Laravel|.

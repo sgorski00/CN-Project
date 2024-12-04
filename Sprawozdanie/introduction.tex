@@ -1,0 +1,23 @@
+\chapter{Wstęp}
+
+\section{Opis projektu} 
+Projekt miał na celu przygotowanie konfiguracji technologii Docker, która umożliwi łatwe uruchamianie aplikacji webowej „CN-Project”. Aby osiągnąć oczekiwany efekt, konieczne było utworzenie kontenerów zawierających niezbędne usługi, takie jak: serwer aplikacji PHP z frameworkiem Laravel, baza danych MySQL, serwer Nginx oraz system cache Redis. Dzięki użyciu Dockera możliwe będzie zapewnienie jednorodnego środowiska pracy dla wszystkich członków zespołu, bez potrzeby ręcznego instalowania i konfigurowania aplikacji oraz jej zależności na każdym komputerze.
+
+\section{Podjęte kroki} 
+Aby przygotować odpowiednie środowisko, zostały podjęte następujące kroki: 
+\begin{enumerate} 
+    \item Zainstalowanie programu Docker na stacji roboczej. 
+    \item Utworzenie pliku \verb|docker-compose.yml| w folderze głównym projektu. 
+    \item Utworzenie potrzebnych plików konfiguracyjnych. 
+    \item Konfiguracja projektu. 
+    \item Automatyzacja uruchomienia aplikacji. 
+\end{enumerate}
+
+\section{Cele projektu}
+Główne cele wykonanego projektu to: 
+\begin{enumerate} 
+    \item Szybkie i spójne środowisko deweloperskie: Dzięki Dockerowi każdy deweloper w zespole może uruchomić projekt na swoim komputerze w identycznym środowisku, eliminując problemy związane z różnicami w konfiguracji lokalnych maszyn. 
+    \item Automatyzacja instalacji i konfiguracji: Projekt automatyzuje proces instalacji wszystkich niezbędnych komponentów aplikacji, takich jak PHP, MySQL, Redis oraz Nginx, co pozwala na oszczędność czasu przy wdrażaniu nowego środowiska. 
+    \item Skalowalność i łatwość rozwoju: Użycie kontenerów pozwala na łatwe dodawanie nowych usług, takich jak Node.js czy NPM, w przyszłości. 
+    \item Izolacja usług: Każda z usług działa w osobnym kontenerze, co ułatwia zarządzanie nimi niezależnie. 
+\end{enumerate}

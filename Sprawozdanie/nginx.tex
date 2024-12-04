@@ -1,0 +1,70 @@
+\section{Nginx}
+Kolejnym kluczowym elementem aplikacji webowej jest serwer HTTP. Do obsługi ruchu HTTP użyty został serwer \verb|Nginx|, który został skonfigurowany do prekazywania żądań do aplikacji PHP. Użyta została wersja \verb|latest|, co oznacz najnowszą wersję z możliwych. Zabieg ten ma na celu ciągłe aktualizacje, które zwiększą bezpieczeństwo aplikacji. Mimo zmieniającej się wersji serwera \verb|Nginx|, nie powinno tworzyć to problemów. Serwer Nginx działa na porcie 80, czyli na nim aplikacja będzie uruchamiana.
+
+\subsection{docker-compose.yml}
+W tej sekcji konfiguracja jest prosta. Wszystkie klucze zostały omówione w poprzednich podrozdziałach dotyczących innych usług.
+
+\begin{lstlisting}[language=yaml, caption={Konfiguracja kontenera Nginx w pliku docker-compose.yml}, label={lst:docker_compose_nginx}, numbers=left, frame=single]
+    nginx:
+        image: nginx:latest
+        container_name: nginx-container
+        ports:
+            - "80:80"
+        volumes:
+            - ./environment/dev/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+            - ./:/var/www
+        networks:
+            - cn-network
+        depends_on:
+            - php
+\end{lstlisting}
+
+\textit{Warto zwrócić uwagę na podpięcie pliku konfiguracyjnego do kontenera serwera HTTP. Znacznik :ro oznacza read-only (tylko do odczytu). Opis pliku znajduje się w rozdziale 3.3.2}
+
+\subsection{nginx.conf}
+Plik \verb|nginx.conf| definiuje w jaki sposób \verb|Nginx| ma obsługiwać przychodzące żądania. W przypadku tego proejktu jest podzielony na dwie sekcje - \verb|events| - listing \ref{lst:nginx_config_events} i \verb|http| - listing \ref{lst:nginx_config_http}.
+
+\begin{lstlisting}[style=nginx, caption={Plik konfiguracyjny nginx.conf - sekcja events}, label={lst:nginx_config_events}]
+events {
+    worker_connections 1024;
+}
+\end{lstlisting}
+
+W tym przypadku została określona liczba jednoczesnych połączeń na 1024.
+
+\newpage
+\begin{lstlisting}[style=nginx, caption={Plik konfiguracyjny nginx.conf - sekcja http}, label={lst:nginx_config_http}]
+http {
+    server {
+        listen 80;
+        server_name localhost;
+
+        root /var/www/public;
+        index index.php index.html;
+
+        location / {
+            try_files $uri $uri/ /index.php?$query_string;
+        }
+
+        location ~ \.php$ {
+            include fastcgi_params;
+            fastcgi_pass php-container:9000;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+            fastcgi_intercept_errors on;
+        }
+
+        location ~ /\.ht {
+            deny all;
+        }
+    }
+}
+\end{lstlisting}
+
+Ta sekcja jest bardziej rozbudowana. Mówi między innymi o tym, że serwer \verb|Nginx| będzie nasłuchiwał na serwerze o nazwie localhost, na porcie 80. Katalog okreslony jako główny to /ver/www/public. Domyślnym plikiem indexowym jest plik \verb|index| z rozszerzeniem \verb|php| lub \verb|html|.
+
+Następnie jest \verb|location /| - pole to określa w jaki sposób serwer ma obsłużyć żądanie HTTP wysłane na stronę. \verb|Nginx| spróbuje znaleźć plik lub katalog odpowiadający żądanej ścieżce. Jeśli ścieżka nie istnieje, pzekieruje żądanie do \verb|index.php| wraz z parametrami \verb|$query_string|.
+
+Najdłuższa sekcja na liście to \verb|location ~ \.php$| - określa ona regułę obsługi wszystkich plików PHP. Skonfigurowane zostały tutaj niezbędne parametry do komunikacji z PHP. Najbardziej interesującym nas elementem jest \verb|fastcgi_pass| - ustawiamy tutaj, gdzie \verb|Nginx| ma szukać serwera PHP
+\textit{Wpisana musi być nazwa kontenera, na którym jest uruchomiony PHP wraz z portem!}
+
+Na koniec zablokowany jest dostęp do wszystkich plików, kórych nazwa zaczyna się od .ht (np. \verb|.htaccess|). Jest to istotne pod względem bezpieczeństwa aplikacji.

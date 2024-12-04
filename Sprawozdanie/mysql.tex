@@ -1,0 +1,32 @@
+\section{MySQL}
+W projekcie został użyty obraz MySQL w wersji 8.0 jako silnik bazy danych. Zostało to podyktowane wysoką wydajnością, kompatybilnością z używanym środowiskiem oraz łatowścią korzystania i konfigurowania. Baza danych jest niezbędnym elementem każdej nowoczesnej aplikacji, w szczególności webowej.
+
+\subsection{docker-compose.yml}
+Cała konfiguracja serwera \verb|MySQL| opiera się na 11 wierszach zapisanych w pliku \verb|docker-copmpose|.
+
+\begin{lstlisting}[language=yaml, caption={Konfiguracja kontenera MySQL w pliku docker-compose.yml}, label={lst:docker_compose_mysql}, numbers=left, frame=single]
+    mysql:
+        image: mysql:8.0
+        container_name: mysql-container
+        ports:
+            - "3306:3306"
+        environment:
+            - MYSQL_DATABASE=${DB_DATABASE}
+            - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+        volumes:
+            - db-data:/var/lib/mysql
+        networks:
+            - cn-network
+\end{lstlisting}
+
+W tym przypadku, w przeciwieństwie do konfiguracji PHP nie używamy klucza \verb|build|, tylko \verb|image|. Określamy w nim bezpośrednio obraz, z którego będziemy korzystać. Nowym kluczem jest również klucz \verb|ports|. Jest to klucz porównywalny do \verb|expose|, z taką różnicą, że port ten jest widoczny zewnątrz dockera - możemy np. dostać się do niego przez przeglądarkę.
+Dochodzi tutaj również klucz \verb|environment|, który zawiera listę zmiennych. W konfiguracji użyta została tylko nazwa bazy danych i hasło do konta użytkowanika root. Dane te pobierane są z pliku .env, z pól, kórych nazwa jest wpisana w klamrach.
+
+\textit{W kluczu environment można wpisać również wartości wprost, wtedy nie będą pobierane z pliku .env, tylko bezpośrednio z tekstu, który został wpisany jako wartość klucza.}
+
+Ważny jest również klucz \verb|volumes|, w którym tworzymy wolumen łączący \verb|db-data| z folderem mysql w kontenerze. Sposób tworzenia wolumenu jest ukazany w listingu \ref{lst:docker_compose_vlm}
+
+\begin{lstlisting}[language=yaml, caption={Wolumen db-data w pliku docker-compose.yml}, label={lst:docker_compose_vlm}, numbers=left, frame=single]
+volumes:
+    db-data:
+\end{lstlisting}
